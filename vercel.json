@@ -1,0 +1,5 @@
+{
+  "env": {
+    "DATABASE_PATH": "./ducs-contacts.db"
+  }
+}
