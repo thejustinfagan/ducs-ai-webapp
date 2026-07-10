@@ -27,6 +27,7 @@ export const GET = async (request: NextRequest) => {
         dateTo: searchParams.get('dateTo') || undefined,
         brandKeywords: searchParams.get('brandKeywords') || undefined,
         tags: searchParams.get('tags') ? searchParams.get('tags')!.split(',').filter(t => t) : undefined,
+        category: searchParams.get('category') as 'direct_outreach' | 'location_verification' | undefined,
       };
       const results = advancedSearchContacts(filters);
       return NextResponse.json({ results });

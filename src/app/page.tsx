@@ -34,6 +34,7 @@ interface Stats {
   byGrade: Record<string, number>;
   withEmail: number;
   withPhone: number;
+  byCategory?: Record<string, { count: number; avg_score: number }>;
 }
 
 interface AdvancedFilters {
@@ -46,6 +47,7 @@ interface AdvancedFilters {
   dateFrom?: string;
   dateTo?: string;
   brandKeywords?: string;
+  category?: 'direct_outreach' | 'location_verification' | 'all';
 }
 
 const TAG_OPTIONS = [
@@ -99,6 +101,7 @@ export default function Home() {
       if (advancedFilters.dateFrom) params.set('dateFrom', advancedFilters.dateFrom);
       if (advancedFilters.dateTo) params.set('dateTo', advancedFilters.dateTo);
       if (advancedFilters.brandKeywords) params.set('brandKeywords', advancedFilters.brandKeywords);
+      if (advancedFilters.category && advancedFilters.category !== 'all') params.set('category', advancedFilters.category);
     } else {
       if (query) params.set('q', query);
       if (selectedGrade) params.set('grade', selectedGrade);
@@ -254,6 +257,13 @@ export default function Home() {
                 <span className="text-green-600">{stats.withEmail.toLocaleString()}</span> with email
                 {' • '}
                 <span className="text-blue-600">{stats.withPhone.toLocaleString()}</span> with phone
+                {stats.byCategory && (
+                  <>
+                    {' • '}
+                    <span className="text-purple-600 font-medium">{stats.byCategory.direct_outreach?.count.toLocaleString() || 0}</span> direct outreach
+                    {' '}(avg score: {stats.byCategory.direct_outreach?.avg_score || 0})
+                  </>
+                )}
               </div>
             )}
           </div>
@@ -340,6 +350,23 @@ export default function Home() {
                 <h3 className="font-semibold text-gray-700">Advanced Filters</h3>
                 <button onClick={clearAdvancedFilters} className="text-sm text-blue-600 hover:underline">Clear all</button>
               </div>
+              <div className="mb-4">
+                <label className="flex items-center gap-2 cursor-pointer p-3 bg-white border border-gray-200 rounded-md hover:border-purple-300">
+                  <input
+                    type="checkbox"
+                    checked={advancedFilters.category === 'direct_outreach'}
+                    onChange={(e) => setAdvancedFilters({ 
+                      ...advancedFilters, 
+                      category: e.target.checked ? 'direct_outreach' : undefined 
+                    })}
+                    className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                  />
+                  <div>
+                    <span className="text-sm font-medium text-gray-900">⭐ Direct Outreach Only</span>
+                    <p className="text-xs text-gray-500">Show only high-value contacts with email/phone (brokers, franchise filing contacts)</p>
+                  </div>
+                </label>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Score Min</label>
@@ -388,6 +415,19 @@ export default function Home() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                     placeholder="e.g., McDonald's, Starbucks, Subway"
                   />
+                </div>
+                <div className="md:col-span-2 lg:col-span-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Contact Category</label>
+                  <select
+                    value={advancedFilters.category ?? 'all'}
+                    onChange={(e) => setAdvancedFilters({ ...advancedFilters, category: e.target.value as any })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                  >
+                    <option value="all">All Contacts</option>
+                    <option value="direct_outreach">⭐ Direct Outreach Only</option>
+                    <option value="location_verification">📍 Location/Verification Only</option>
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">Direct Outreach = brokers + franchise contacts with emails</p>
                 </div>
               </div>
             </div>

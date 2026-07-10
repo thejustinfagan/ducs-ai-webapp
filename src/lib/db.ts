@@ -97,6 +97,7 @@ export interface AdvancedFilters {
   dateTo?: string;
   brandKeywords?: string;
   tags?: string[];
+  category?: 'direct_outreach' | 'location_verification';
 }
 
 export function advancedSearchContacts(filters: AdvancedFilters = {}): Contact[] {
@@ -164,6 +165,11 @@ export function advancedSearchContacts(filters: AdvancedFilters = {}): Contact[]
     });
   }
   
+  if (filters.category) {
+    conditions.push('c.contact_category = ?');
+    params.push(filters.category);
+  }
+  
   if (conditions.length > 0) {
     sql += ' WHERE ' + conditions.join(' AND ');
   }
@@ -195,12 +201,14 @@ export function getStats() {
   const byGrade = db.prepare('SELECT grade, COUNT(*) as count FROM contacts GROUP BY grade ORDER BY grade').all() as Array<{ grade: string; count: number }>;
   const withEmail = db.prepare("SELECT COUNT(*) as count FROM contacts WHERE email != ''").get() as { count: number };
   const withPhone = db.prepare("SELECT COUNT(*) as count FROM contacts WHERE phone != ''").get() as { count: number };
+  const byCategory = db.prepare('SELECT contact_category, COUNT(*) as count, AVG(score) as avg_score FROM contacts GROUP BY contact_category').all() as Array<{ contact_category: string; count: number; avg_score: number }>;
   
   return {
     total: total.count,
     byGrade: byGrade.reduce((acc, g) => ({ ...acc, [g.grade]: g.count }), {}),
     withEmail: withEmail.count,
     withPhone: withPhone.count,
+    byCategory: byCategory.reduce((acc, c) => ({ ...acc, [c.contact_category]: { count: c.count, avg_score: Math.round(c.avg_score) } }), {}),
   };
 }
 
